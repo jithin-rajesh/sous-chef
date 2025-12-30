@@ -139,11 +139,16 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  int _selectedIndex = 0;
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final recipeData = Provider.of<RecipeProvider>(context);
-    final recipes = recipeData.recipes;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sous Chef'),
@@ -155,74 +160,171 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: IndexedStack(
+        index: _selectedIndex,
         children: [
-          // Quick Add Section
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _recipeInputController,
-                    decoration: const InputDecoration(
-                      hintText: 'Paste recipe url or text here',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _isParsing
-                    ? const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      )
-                    : IconButton(
-                        onPressed: _handleQuickAdd,
-                        icon: const Icon(Icons.send),
-                        color: Colors.orange, // Saffron Orange roughly
-                        tooltip: 'Parse Recipe',
-                      ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: recipeData.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: recipes.length,
-                    itemBuilder: (ctx, i) {
-                      final recipe = recipes[i];
-                      return Card(
-                        elevation: 2,
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(16),
-                          title: Text(
-                            recipe.title,
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                          onTap: () {
-                            Navigator.of(context).pushNamed(
-                              IngredientScreen.routeName,
-                              arguments: recipe.id,
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  ),
-          ),
+          _buildHomeTab(),
+          _buildSearchTab(),
+          _buildSavedTab(),
         ],
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: 'Search',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bookmark),
+            label: 'Saved',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Theme.of(context).primaryColor,
+        onTap: _onItemTapped,
+      ),
+    );
+  }
+
+  Widget _buildHomeTab() {
+    return Center(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Text(
+                'Add a New Recipe',
+                style: Theme.of(context).textTheme.titleLarge,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [
+                  BoxShadow(
+                    blurRadius: 12,
+                    color: Colors.black12,
+                    offset: Offset(0, 4),
+                  )
+                ],
+              ),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _recipeInputController,
+                    decoration: InputDecoration(
+                      hintText: 'Paste your Recipe URL or text',
+                      filled: true,
+                      fillColor: const Color(0xFFFFF4C2),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                    maxLines: 5,
+                    minLines: 1,
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: _isParsing
+                        ? const Center(child: CircularProgressIndicator())
+                        : ElevatedButton.icon(
+                            onPressed: () async {
+                              await _handleQuickAdd();
+                              // Switch to saved tab on success if not parsing anymore (and no error theoretically)
+                              // Simple check: if text is cleared, it was likely successful
+                              if (_recipeInputController.text.isEmpty) {
+                                setState(() {
+                                  _selectedIndex = 2; // Switch to Saved
+                                });
+                              }
+                            },
+                            icon: const Icon(Icons.auto_awesome),
+                            label: const Text('Parse Recipe'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).primaryColor,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchTab() {
+    return const Center(
+      child: Text('Search Feature Coming Soon'),
+    );
+  }
+
+  Widget _buildSavedTab() {
+    final recipeData = Provider.of<RecipeProvider>(context);
+    final recipes = recipeData.recipes;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Text(
+            'Saved Recipes',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+        ),
+        Expanded(
+          child: recipeData.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : recipes.isEmpty 
+                ? const Center(child: Text('No saved recipes yet.'))
+                : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: recipes.length,
+                  itemBuilder: (ctx, i) {
+                    final recipe = recipes[i];
+                    return Card(
+                      elevation: 2,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        title: Text(
+                          recipe.title,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18),
+                        ),
+                        subtitle: Text('${recipe.ingredients.length} ingredients • ${recipe.steps.length} steps'),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                        onTap: () {
+                          Navigator.of(context).pushNamed(
+                            IngredientScreen.routeName,
+                            arguments: recipe.id,
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
     );
   }
 }

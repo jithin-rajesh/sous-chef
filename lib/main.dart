@@ -31,21 +31,21 @@ class SousChefApp extends StatelessWidget {
           ),
           scaffoldBackgroundColor: Colors.white,
           textTheme: TextTheme(
-            displayLarge: GoogleFonts.playfairDisplay(
+            displayLarge: GoogleFonts.zenDots(
               fontSize: 32,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
-            titleLarge: GoogleFonts.playfairDisplay(
+            titleLarge: GoogleFonts.zenDots(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
-            bodyLarge: GoogleFonts.lato(
+            bodyLarge: GoogleFonts.openSans(
               fontSize: 18,
               color: Colors.black87,
             ),
-            bodyMedium: GoogleFonts.lato(
+            bodyMedium: GoogleFonts.openSans(
               fontSize: 16,
               color: Colors.black54,
             ),
@@ -54,7 +54,7 @@ class SousChefApp extends StatelessWidget {
             backgroundColor: Colors.white,
             elevation: 0,
             iconTheme: const IconThemeData(color: Colors.black87),
-            titleTextStyle: GoogleFonts.playfairDisplay(
+            titleTextStyle: GoogleFonts.zenDots(
               color: Colors.black87,
               fontSize: 22,
               fontWeight: FontWeight.bold,

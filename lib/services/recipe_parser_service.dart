@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/recipe_model.dart';
 
@@ -39,7 +40,7 @@ Recipe Text: $text
       return Recipe.fromJson(data);
 
     } catch (e) {
-      print('Gemini Parser Error: $e');
+      debugPrint('Gemini Parser Error: $e');
       throw Exception('Failed to parse recipe. Please check your API key and try again.');
     }
   }
