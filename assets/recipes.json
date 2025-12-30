@@ -1,0 +1,34 @@
+[
+    {
+        "id": "1",
+        "title": "Madras Biryani",
+        "ingredients": [
+            {
+                "name": "Basmati Rice",
+                "amount": "1.5 cups"
+            },
+            {
+                "name": "Onions",
+                "amount": "2 large"
+            },
+            {
+                "name": "Chicken",
+                "amount": "500g"
+            }
+        ],
+        "steps": [
+            {
+                "step_index": 1,
+                "title": "Sauté Onions",
+                "instruction": "Heat oil and sauté onions until brown.",
+                "timer_seconds": 300
+            },
+            {
+                "step_index": 2,
+                "title": "Add Chicken",
+                "instruction": "Add chicken and spices. Cook for 10 minutes.",
+                "timer_seconds": 600
+            }
+        ]
+    }
+]
