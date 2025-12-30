@@ -17,7 +17,15 @@ Convert this recipe text into valid JSON matching this schema:
   "title": string, 
   "ingredients": [{"name": string, "amount": string}], 
   "steps": [{"step_index": int, "title": string, "instruction": string, "timer_seconds": int or null}] 
-}. 
+}
+
+IMPORTANT RULES:
+1. Break down the recipe into as many SMALL, GRANULAR steps as possible. 
+2. Only combine multiple actions into a single step if they are related
+3. Example: Instead of "Chop onions and fry them", split it into "Chop the onions" and "Fry the onions".
+4. If there is a timer mentioned (e.g. "cook for 5 mins"), ensure 'timer_seconds' is set (e.g. 300).
+5. Extract ALL ingredients and steps from the text.
+
 Return ONLY raw JSON, no markdown formatting.
 
 Recipe Text: $text
