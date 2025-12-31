@@ -31,14 +31,14 @@ class SousChefApp extends StatelessWidget {
             primary: const Color(0xFFFFAB40),
             secondary: const Color(0xFFFFAB40),
             surface: const Color(0xFFFDFBF7),
-            surfaceVariant: const Color(0xFFFFE0B2), // Light Orange/Cream for inputs
+            surfaceContainerHighest: const Color(0xFFFFE0B2), // Light Orange/Cream for inputs
           ),
           cardTheme: CardTheme(
             color: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
-              side: BorderSide(color: Colors.grey.withOpacity(0.05)),
+              side: BorderSide(color: Colors.grey.withValues(alpha: 0.05)),
             ),
           ),
           textTheme: TextTheme(

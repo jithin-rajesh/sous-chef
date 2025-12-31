@@ -35,10 +35,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _showApiKeyDialog() async {
-    final TextEditingController _apiKeyController = TextEditingController();
+    final TextEditingController apiKeyController = TextEditingController();
     final currentKey = await _apiKeyService.getApiKey();
     if (currentKey != null) {
-      _apiKeyController.text = currentKey;
+      apiKeyController.text = currentKey;
     }
 
     if (!mounted) return;
@@ -56,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: _apiKeyController,
+              controller: apiKeyController,
               decoration: const InputDecoration(
                 labelText: 'API Key',
                 border: OutlineInputBorder(),
@@ -73,10 +73,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              final key = _apiKeyController.text.trim();
+              final key = apiKeyController.text.trim();
               if (key.isNotEmpty) {
                 await _apiKeyService.saveApiKey(key);
-                if (mounted) {
+                if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('API Key saved!')),
@@ -98,15 +98,14 @@ class _HomeScreenState extends State<HomeScreen> {
     // Check for API Key first
     String? apiKey = await _apiKeyService.getApiKey();
     if (apiKey == null || apiKey.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('API Key required. Please enter it in Settings.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        _showApiKeyDialog();
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('API Key required. Please enter it in Settings.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      _showApiKeyDialog();
       return;
     }
 
@@ -172,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.1))),
+          border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.1))),
         ),
         child: BottomNavigationBar(
           elevation: 0,
@@ -227,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(32),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -340,7 +339,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
+                            color: Colors.black.withValues(alpha: 0.04),
                             blurRadius: 16,
                             offset: const Offset(0, 6),
                           ),
@@ -364,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   width: 60,
                                   height: 60,
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Icon(

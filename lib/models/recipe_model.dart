@@ -63,7 +63,7 @@ class Step {
       instruction: json['instruction'] as String? ?? '',
       timerSeconds: json['timer_seconds'] is int
           ? json['timer_seconds'] as int
-          : int.tryParse(json['timer_seconds'].toString() ?? ''),
+          : int.tryParse(json['timer_seconds']?.toString() ?? ''),
     );
   }
 }

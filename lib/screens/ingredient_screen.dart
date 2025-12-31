@@ -54,12 +54,12 @@ class IngredientScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                             color: isChecked
-                                ? Theme.of(context).primaryColor.withOpacity(0.2)
+                                ? Theme.of(context).primaryColor.withValues(alpha: 0.2)
                                 : Colors.transparent,
                             width: 1.5),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.02),
+                            color: Colors.black.withValues(alpha: 0.02),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           )
