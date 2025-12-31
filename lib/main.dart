@@ -33,7 +33,7 @@ class SousChefApp extends StatelessWidget {
             surface: const Color(0xFFFDFBF7),
             surfaceContainerHighest: const Color(0xFFFFE0B2), // Light Orange/Cream for inputs
           ),
-          cardTheme: CardTheme(
+          cardTheme: CardThemeData(
             color: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(
