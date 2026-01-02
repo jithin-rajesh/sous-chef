@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import '../models/recipe_model.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 class RecipeProvider with ChangeNotifier {
   List<Recipe> _recipes = [];
@@ -57,8 +58,28 @@ class RecipeProvider with ChangeNotifier {
 
   bool areAllIngredientsChecked(String recipeId) {
     final recipe = _recipes.firstWhere((r) => r.id == recipeId);
-    final checkedCount = _checkedIngredients[recipeId]?.length ?? 0;
-    return checkedCount == recipe.ingredients.length;
+    if (_checkedIngredients[recipeId] == null) return false;
+    
+    return recipe.ingredients.every((ingredient) => 
+      _checkedIngredients[recipeId]!.contains(ingredient.name));
+  }
+
+  void toggleAllIngredients(String recipeId, bool value) {
+    final recipe = _recipes.firstWhere((r) => r.id == recipeId);
+    if (!_checkedIngredients.containsKey(recipeId)) {
+      _checkedIngredients[recipeId] = {};
+    }
+
+    if (value) {
+      // Select All
+      for (var ingredient in recipe.ingredients) {
+        _checkedIngredients[recipeId]!.add(ingredient.name);
+      }
+    } else {
+      // Deselect All
+      _checkedIngredients[recipeId]!.clear();
+    }
+    notifyListeners();
   }
 
   // --- Global Timer Logic ---
@@ -137,12 +158,125 @@ class RecipeProvider with ChangeNotifier {
     }
   }
   
+  // --- Raw Recipe / Search Logic ---
+  List<RawRecipe> _rawRecipes = [];
+  List<RawRecipe> _searchResults = [];
+  bool _isLoadingRaw = false;
+
+  List<RawRecipe> get searchResults => _searchResults;
+  bool get isLoadingRaw => _isLoadingRaw;
+
+  Future<void> loadRawRecipes() async {
+    if (_rawRecipes.isNotEmpty) return;
+
+    _isLoadingRaw = true;
+    notifyListeners();
+
+    try {
+      // Connect to emulator in debug mode (Optional: better to do in main.dart, but here for ensuring)
+      /* 
+       * Note: Ideally emulator connection is set up once in main.dart.
+       * Assuming user follows the guide to setup emulator connection as typically done.
+       * But to be safe, we can try to use `FirebaseFunctions.instance.useFunctionsEmulator` if not globally set.
+       * However, typically this is done in main(). I will assume main() will be updated or user knows.
+       */
+       
+      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable('getRawRecipes');
+      final result = await callable.call();
+      
+      final List<dynamic> data = result.data;
+      _rawRecipes = data.map((json) => RawRecipe.fromJson(Map<String, dynamic>.from(json))).toList();
+      
+    } catch (e) {
+      debugPrint("Error loading raw recipes from Cloud: $e");
+      // Fallback removed to enforce server-side source.
+      throw Exception("Failed to load recipes from server: $e");
+    } finally {
+      _isLoadingRaw = false;
+      notifyListeners();
+    }
+  }
+
+  void searchRawRecipes(String query) {
+    if (query.isEmpty) {
+      _searchResults = [];
+    } else {
+      _searchResults = _rawRecipes.where((recipe) {
+        return recipe.name.toLowerCase().contains(query.toLowerCase());
+      }).toList();
+    }
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     for (var t in _internalTimers.values) {
       t.cancel();
     }
     super.dispose();
+  }
+}
+
+class RawRecipe {
+  final String name;
+  final String url;
+  final List<RawIngredient> ingredients;
+  final List<String> instructions;
+
+  RawRecipe({
+    required this.name,
+    required this.url,
+    required this.ingredients,
+    required this.instructions,
+  });
+
+  factory RawRecipe.fromJson(Map<String, dynamic> json) {
+    return RawRecipe(
+      name: json['name'] as String? ?? 'Unknown Recipe',
+      url: json['url'] as String? ?? '',
+      ingredients: (json['ingredients'] as List<dynamic>?)
+              ?.map((e) => RawIngredient.fromJson(e))
+              .toList() ??
+          [],
+      instructions: (json['instructions'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+    );
+  }
+
+  String toFullText() {
+    final buffer = StringBuffer();
+    buffer.writeln('Title: $name');
+    buffer.writeln('\nIngredients:');
+    for (var ing in ingredients) {
+      buffer.writeln('- ${ing.amount} ${ing.unit} ${ing.ingredient}');
+    }
+    buffer.writeln('\nInstructions:');
+    for (var i = 0; i < instructions.length; i++) {
+      buffer.writeln('${i + 1}. ${instructions[i]}');
+    }
+    return buffer.toString();
+  }
+}
+
+class RawIngredient {
+  final double amount;
+  final String unit;
+  final String ingredient;
+
+  RawIngredient({
+    required this.amount,
+    required this.unit,
+    required this.ingredient,
+  });
+
+  factory RawIngredient.fromJson(Map<String, dynamic> json) {
+    return RawIngredient(
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      unit: json['unit'] as String? ?? '',
+      ingredient: json['ingredient'] as String? ?? '',
+    );
   }
 }
 

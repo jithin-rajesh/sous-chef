@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/recipe_provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'cooking_mode_screen.dart';
 
 class IngredientScreen extends StatelessWidget {
@@ -35,6 +36,35 @@ class IngredientScreen extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 0.0),
+            child: Consumer<RecipeProvider>(
+              builder: (ctx, provider, child) {
+                final allChecked = provider.areAllIngredientsChecked(recipeId);
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      "Select All",
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                    Checkbox(
+                      value: allChecked,
+                      activeColor: Theme.of(context).primaryColor,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                      onChanged: (val) {
+                         provider.toggleAllIngredients(recipeId, val ?? false);
+                      },
+                    ),
+                  ],
+                );
+              },
             ),
           ),
           Expanded(

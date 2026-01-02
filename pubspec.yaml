@@ -15,6 +15,7 @@ dependencies:
   http: ^1.1.0
   go_router: ^12.0.0 # Added per prompt suggestion (or Navigator) - opting for standard Navigator per prompt "go_router or standard Navigator". Let's stick to standard Navigator for simplicity unless go_router was explicit pref. Prompt said "go_router or standard Navigator". I'll stick to standard Navigator in creating code, but include go_router if I used it. I will use standard Navigator as it is simpler for a single file chat context usually, but the prompt mentioned it. Let's use standard Navigator for "clean and simple" unless complex routing needed.
   google_generative_ai: ^0.2.0
+  cloud_functions: ^4.0.0
   shared_preferences: ^2.2.0
   # Actually, prompt said "go_router or standard Navigator". I'll use standard Navigator.
   # "The AI generates the file structure...". I'll stick to standard Navigator.

@@ -1,55 +1,23 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import '../models/recipe_model.dart';
 
 class RecipeParserService {
-  Future<Recipe> parseRecipe(String text, String apiKey) async {
+  Future<Recipe> parseRecipe(String text) async {
+    // API Key is handled by Cloud Function environment variable.
     try {
-      final model = GenerativeModel(
-        model: 'gemini-2.5-flash',
-        apiKey: apiKey,
-      );
+      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable('parseRecipeWithGemini');
+      final result = await callable.call(<String, dynamic>{
+        'text': text,
+      });
 
-      final prompt = '''
-Convert this recipe text into valid JSON matching this schema: 
-{ 
-  "title": string, 
-  "ingredients": [{"name": string, "amount": string}], 
-  "steps": [{"step_index": int, "title": string, "instruction": string, "timer_seconds": int or null}] 
-}
-
-IMPORTANT RULES:
-1. Break down the recipe into as many SMALL, GRANULAR steps as possible. 
-2. Only combine multiple actions into a single step if they are related
-3. Example: Instead of "Chop onions and fry them", split it into "Chop the onions" and "Fry the onions".
-4. If there is a timer mentioned (e.g. "cook for 5 mins"), ensure 'timer_seconds' is set (e.g. 300).
-5. Extract ALL ingredients and steps from the text.
-
-Return ONLY raw JSON, no markdown formatting.
-
-Recipe Text: $text
-''';
-
-      final content = [Content.text(prompt)];
-      final response = await model.generateContent(content);
-      
-      String? jsonString = response.text;
-      
-      if (jsonString == null) {
-        throw Exception('Empty response from Gemini');
-      }
-
-      // Clean up potential markdown code blocks
-      jsonString = jsonString.replaceAll(RegExp(r'```json\n?'), '').replaceAll(RegExp(r'```'), '').trim();
-
-      final Map<String, dynamic> data = json.decode(jsonString);
-      
+      final Map<String, dynamic> data = Map<String, dynamic>.from(result.data);
       return Recipe.fromJson(data);
 
     } catch (e) {
-      debugPrint('Gemini Parser Error: $e');
-      throw Exception('Failed to parse recipe. Please check your API key and try again.');
+      debugPrint('Cloud Function Parser Error: $e');
+      throw Exception('Failed to parse recipe via Cloud. Please ensure backend is running.');
     }
   }
 }

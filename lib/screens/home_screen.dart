@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/recipe_provider.dart';
 import '../services/recipe_parser_service.dart';
-import '../services/api_key_service.dart';
 import 'ingredient_screen.dart';
+import 'search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -25,7 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final TextEditingController _recipeInputController = TextEditingController();
   final RecipeParserService _recipeParserService = RecipeParserService();
-  final ApiKeyService _apiKeyService = ApiKeyService();
   bool _isParsing = false;
 
   @override
@@ -34,87 +33,16 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  Future<void> _showApiKeyDialog() async {
-    final TextEditingController apiKeyController = TextEditingController();
-    final currentKey = await _apiKeyService.getApiKey();
-    if (currentKey != null) {
-      apiKeyController.text = currentKey;
-    }
-
-    if (!mounted) return;
-
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Enter Gemini API Key'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'To use the AI recipe parser, you need a Google Gemini API Key.',
-              style: TextStyle(fontSize: 14, color: Colors.black54),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: apiKeyController,
-              decoration: const InputDecoration(
-                labelText: 'API Key',
-                border: OutlineInputBorder(),
-                hintText: 'Paste your API Key here',
-              ),
-              obscureText: true,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final key = apiKeyController.text.trim();
-              if (key.isNotEmpty) {
-                await _apiKeyService.saveApiKey(key);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('API Key saved!')),
-                  );
-                }
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _handleQuickAdd() async {
     final text = _recipeInputController.text.trim();
     if (text.isEmpty) return;
-
-    // Check for API Key first
-    String? apiKey = await _apiKeyService.getApiKey();
-    if (apiKey == null || apiKey.isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('API Key required. Please enter it in Settings.'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-      _showApiKeyDialog();
-      return;
-    }
 
     setState(() {
       _isParsing = true;
     });
 
     try {
-      final recipe = await _recipeParserService.parseRecipe(text, apiKey);
+      final recipe = await _recipeParserService.parseRecipe(text);
       if (!mounted) return;
 
       Provider.of<RecipeProvider>(context, listen: false).addRecipe(recipe);
@@ -152,13 +80,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sous Chef'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: 'Settings',
-            onPressed: _showApiKeyDialog,
-          ),
-        ],
       ),
       body: IndexedStack(
         index: _selectedIndex,
@@ -282,19 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSearchTab() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.search_rounded, size: 64, color: Colors.grey.shade300),
-          const SizedBox(height: 16),
-          Text(
-            'Search Coming Soon',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.grey.shade400),
-          ),
-        ],
-      ),
-    );
+    return const SearchTab();
   }
 
   Widget _buildSavedTab() {

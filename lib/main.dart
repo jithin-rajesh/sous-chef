@@ -6,8 +6,35 @@ import 'providers/recipe_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/ingredient_screen.dart';
 import 'screens/cooking_mode_screen.dart';
-void main() {
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter/foundation.dart'; // for kDebugMode
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase with dummy options for Emulator usage
+  try {
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: 'demo-api-key',
+        appId: 'demo-app-id',
+        messagingSenderId: 'demo-sender-id',
+        projectId: 'cooking-app-e5d3c', // Matches .firebaserc
+      ),
+    );
+  } catch (e) {
+     // Ignore errors in debug, likely already initialized
+  }
+
+  if (kDebugMode) {
+    try {
+      FirebaseFunctions.instance.useFunctionsEmulator('localhost', 5001);
+    } catch (e) {
+      // Ignore
+    }
+  }
+  
   runApp(const SousChefApp());
 }
 
